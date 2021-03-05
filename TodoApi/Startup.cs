@@ -29,7 +29,19 @@ namespace TodoApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<TodoContext>(options => options.UseSqlServer(Configuration.GetConnectionString("TodoContext")));
+
+            // https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-5.0#ecors
+            // https://stackoverflow.com/questions/44379560/how-to-enable-cors-in-asp-net-core-webapi
+            services.AddCors(options =>
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin(); // all websites allowed
+                    builder.AllowAnyMethod(); // all methods (post, put, ..) allowed
+                    builder.AllowAnyHeader(); // all headers allowed
+                }));
+
             services.AddControllers();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "TodoApi", Version = "v1" });
@@ -54,6 +66,9 @@ namespace TodoApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            // https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-5.0#ecors
+            app.UseCors();
 
             app.UseAuthorization();
 
