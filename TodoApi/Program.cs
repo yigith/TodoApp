@@ -6,14 +6,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TodoApi.Models;
 
 namespace TodoApi
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public async static Task Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            (await CreateHostBuilder(args).Build().SeedUsersAsync()).Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
