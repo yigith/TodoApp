@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -8,10 +9,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using TodoApi.Models;
 
@@ -33,6 +36,27 @@ namespace TodoApi
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<TodoContext>()
                 .AddDefaultTokenProviders();
+
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options => 
+                {
+                    options.SaveToken = true;
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidIssuer = "https://localhost",
+                        ValidAudience = "https://localhost",
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("u7dfdfsapppppppppppppp111xxAA"))
+                    };
+                });
 
             // https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-5.0#ecors
             // https://stackoverflow.com/questions/44379560/how-to-enable-cors-in-asp-net-core-webapi
@@ -74,7 +98,8 @@ namespace TodoApi
             // https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-5.0#ecors
             app.UseCors();
 
-            app.UseAuthorization();
+            app.UseAuthentication(); // kimlik doðrulamayý aktif et
+            app.UseAuthorization(); // yetkilendirmeyi aktif et
 
             app.UseEndpoints(endpoints =>
             {
