@@ -51,7 +51,7 @@ namespace TodoApi.Controllers
                 // token (jwt) oluşturma
                 var authClaims = new[]
                 {
-                    new Claim(JwtRegisteredClaimNames.Sub, dto.UserName),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 

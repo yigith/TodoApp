@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TodoApi.Dtos;
 using TodoApi.Models;
 
 namespace TodoApi.Controllers
@@ -22,54 +24,62 @@ namespace TodoApi.Controllers
             _context = context;
         }
 
+        public string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         // GET: api/TodoItems
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
+        public async Task<ActionResult<IEnumerable<TodoItemDto>>> GetTodoItems()
         {
-            return await _context.TodoItems.ToListAsync();
+            return await _context.TodoItems
+                .Where(x => x.OwnerId == UserId)
+                .Select(x => ItemToDto(x))
+                .ToListAsync();
         }
 
         // GET: api/TodoItems/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TodoItem>> GetTodoItem(int id)
+        public async Task<ActionResult<TodoItemDto>> GetTodoItem(int id)
         {
             var todoItem = await _context.TodoItems.FindAsync(id);
 
+            if (todoItem.OwnerId != UserId)
+            {
+                return Unauthorized();
+            }
+                
             if (todoItem == null)
             {
                 return NotFound();
             }
 
-            return todoItem;
+            return ItemToDto(todoItem);
         }
 
         // PUT: api/TodoItems/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTodoItem(int id, TodoItem todoItem)
+        public async Task<IActionResult> PutTodoItem(int id, TodoItemDto todoItemDto)
         {
-            if (id != todoItem.Id)
+            if (id != todoItemDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(todoItem).State = EntityState.Modified;
+            var dbTodoItem = await _context.TodoItems.FindAsync(id);
 
-            try
+            if (dbTodoItem == null)
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
+
+            if (dbTodoItem.OwnerId != UserId)
             {
-                if (!TodoItemExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return Unauthorized();
             }
+
+            dbTodoItem.Name = todoItemDto.Name;
+            dbTodoItem.IsComplete = todoItemDto.IsComplete;
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
@@ -77,13 +87,19 @@ namespace TodoApi.Controllers
         // POST: api/TodoItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
+        public async Task<ActionResult<TodoItemDto>> PostTodoItem(TodoItemDto todoItemDto)
         {
+            var todoItem = new TodoItem()
+            {
+                Name = todoItemDto.Name,
+                IsComplete = todoItemDto.IsComplete,
+                OwnerId = UserId
+            };
             _context.TodoItems.Add(todoItem);
             await _context.SaveChangesAsync();
 
             //return CreatedAtAction("GetTodoItem", new { id = todoItem.Id }, todoItem);
-            return CreatedAtAction(nameof(GetTodoItem), new { id = todoItem.Id }, todoItem);
+            return CreatedAtAction(nameof(GetTodoItem), new { id = todoItem.Id }, ItemToDto(todoItem));
         }
 
         // DELETE: api/TodoItems/5
@@ -96,6 +112,11 @@ namespace TodoApi.Controllers
                 return NotFound();
             }
 
+            if (todoItem.OwnerId != UserId)
+            {
+                return Unauthorized();
+            }
+
             _context.TodoItems.Remove(todoItem);
             await _context.SaveChangesAsync();
 
@@ -105,6 +126,16 @@ namespace TodoApi.Controllers
         private bool TodoItemExists(int id)
         {
             return _context.TodoItems.Any(e => e.Id == id);
+        }
+
+        private static TodoItemDto ItemToDto(TodoItem todoItem)
+        {
+            return new TodoItemDto()
+            {
+                Id = todoItem.Id,
+                Name = todoItem.Name,
+                IsComplete = todoItem.IsComplete
+            };
         }
     }
 }
