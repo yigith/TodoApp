@@ -8,5 +8,7 @@ namespace TodoApi.Models
 {
     public class ApplicationUser : IdentityUser
     {
+
+        public List<TodoItem> TodoItems { get; set; }
     }
 }
