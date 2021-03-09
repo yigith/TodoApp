@@ -32,6 +32,11 @@ namespace TodoApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0
+            var appSettingsSection = Configuration.GetSection("AppSettings");
+            services.Configure<AppSettings>(appSettingsSection);
+            var appSettings = appSettingsSection.Get<AppSettings>();
+
             services.AddDbContext<TodoContext>(options => options.UseSqlServer(Configuration.GetConnectionString("TodoContext")));
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<TodoContext>()
@@ -52,9 +57,10 @@ namespace TodoApi
                     {
                         ValidateIssuer = true,
                         ValidateAudience = true,
-                        ValidIssuer = "https://localhost",
-                        ValidAudience = "https://localhost",
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("u7dfdfsapppppppppppppp111xxAA"))
+                        ValidIssuer = appSettings.JwtIssuer,
+                        ValidAudience = appSettings.JwtIssuer,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(appSettings.JwtSecret))
                     };
                 });
 
