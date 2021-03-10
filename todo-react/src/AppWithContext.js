@@ -1,11 +1,19 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import App from './App'
 import AppContext from './AppContext'
 
 
 function AppWithContext() {
-    const [loggedIn, setLoggedIn] = useState(false);
-    const [token, setToken] = useState(null);
+    let defaultLoggedIn = false;
+    let defaultToken = null;
+
+    if(localStorage["token"]) {
+        defaultLoggedIn = true;
+        defaultToken = localStorage["token"];
+    }
+
+    const [loggedIn, setLoggedIn] = useState(defaultLoggedIn);
+    const [token, setToken] = useState(defaultToken);
 
     return (
         <AppContext.Provider value={{ loggedIn, setLoggedIn, token, setToken }}>

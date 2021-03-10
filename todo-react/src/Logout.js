@@ -6,6 +6,7 @@ function Logout() {
     const ctx = useContext(AppContext);
 
     useEffect(() => {
+        localStorage.removeItem("token");
         ctx.setToken(null);
         ctx.setLoggedIn(false);
     });
