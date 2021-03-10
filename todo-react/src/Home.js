@@ -1,15 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import AppContext from './AppContext';
 import './Home.css';
 
 function Home() {
+  const apiUrl = process.env.REACT_APP_API_URL;
+  const ctx = useContext(AppContext);
   const [todos, setTodos] = useState([{ name: "Loading.."}]);
   const [newTodo, setNewTodo] = useState({ id: 0, name: "", isCompleted: false});
 
   const addNewTodo = (e) => {
     e.preventDefault();
-    fetch("https://localhost:5001/api/TodoItems", {
+    fetch(apiUrl + "TodoItems", {
       method: "post",
       headers: {
+        "Authorization" : "Bearer " + ctx.token,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(newTodo)
@@ -23,9 +27,13 @@ function Home() {
 
   useEffect(() => {
     // https://jsonplaceholder.typicode.com/todos
-    fetch("https://localhost:5001/api/TodoItems")
+    fetch(apiUrl + "TodoItems", {
+      headers: {
+        "Authorization" : "Bearer " + ctx.token
+      }
+    })
       .then(response => response.json())
-      .then(json => setTodos(json));
+      .then(data => setTodos(data));
   }, []);
 
   return (
