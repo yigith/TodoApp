@@ -5,8 +5,8 @@ import AppContext from './AppContext'
 function Login() {
     const history = useHistory();
     const ctx = useContext(AppContext);
-    const [userName, setUserName] = useState("");
-    const [password, setPassword] = useState("");
+    const [userName, setUserName] = useState("user@example.com");
+    const [password, setPassword] = useState("Password1.");
     const [errors, setErrors] = useState([]);
 
     const formSubmit = (event) => {
