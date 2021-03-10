@@ -1,47 +1,78 @@
 // https://reactrouter.com/web/guides/quick-start
-import React from "react";
+import React, {useContext} from "react";
 import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link
+  Link,
+  Redirect
 } from "react-router-dom";
 import Home from './Home'
 import Login from './Login'
 import Register from './Register'
+import './App.css'
+import AppContext from './AppContext'
 
-export default function App() {
+function Nav() {
   return (
-    <Router>
-      <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-            <li>
-              <Link to="/register">Register</Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* A <Switch> looks through its children <Route>s and
-            renders the first one that matches the current URL. */}
-        <Switch>
-          <Route path="/login">
-            <Login />
-          </Route>
-          <Route path="/register">
-            <Register />
-          </Route>
-          <Route path="/">
-            <Home />
-          </Route>
-        </Switch>
-      </div>
-    </Router>
+    <nav>
+      <ul className="navMenu">
+        <li>
+          <Link to="/">Home</Link>
+        </li>
+        <li>
+          <Link to="/login">Login</Link>
+        </li>
+        <li>
+          <Link to="/register">Register</Link>
+        </li>
+      </ul>
+    </nav>
   );
 }
+
+export default function App() {
+  const ctx = useContext(AppContext);
+
+  if (ctx.loggedIn) {
+    return (
+      <Router>
+        <div>
+          <Nav />
+          <Switch>
+            <Route path="/login">
+              <Login />
+            </Route>
+            <Route path="/register">
+              <Register />
+            </Route>
+            <Route path="/">
+              <Home />
+            </Route>
+          </Switch>
+        </div>
+      </Router>
+    );
+  }
+  else {
+    return (
+      <Router>
+        <div>
+          <Nav />
+          <Switch>
+            <Route path="/login">
+              <Login />
+            </Route>
+            <Route path="/register">
+              <Register />
+            </Route>
+            <Route path="/">
+              <Redirect to="/login" />
+            </Route>
+          </Switch>
+        </div>
+      </Router>
+    );
+  }
+}
+
